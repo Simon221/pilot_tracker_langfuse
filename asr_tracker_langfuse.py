@@ -15,15 +15,15 @@ load_dotenv(env_path)
 
 # Configuration
 RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY", "")
-RUNPOD_ENDPOINT_ID = os.getenv("RUNPOD_ENDPOINT_ID", "")
-RUNPOD_ENDPOINT = os.getenv("RUNPOD_ENDPOINT", "")
+RUNPOD_ASR_ENDPOINT_ID = os.getenv("RUNPOD_ASR_ENDPOINT_ID", "")
+RUNPOD_ASR_ENDPOINT = os.getenv("RUNPOD_ASR_ENDPOINT", "")
 
 # Use the proper endpoint - /transcribe path for the service
-RUNPOD_ENDPOINT_URL = f"https://{RUNPOD_ENDPOINT_ID}.api.runpod.ai/transcribe"
+RUNPOD_ENDPOINT_URL = f"https://{RUNPOD_ASR_ENDPOINT_ID}.api.runpod.ai/transcribe"
 LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
 LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
-LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://us.cloud.langfuse.com")
-LANGFUSE_BASE_URL=os.getenv("LANGFUSE_BASE_URL", "https://us.cloud.langfuse.com")
+LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "")
+LANGFUSE_BASE_URL=os.getenv("LANGFUSE_BASE_URL", "")
 
 
 # Initialisation Langfuse
@@ -66,7 +66,7 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
     # Créer une génération pour le modèle ASR AVANT l'appel API
     # Pour écouter l'audio dans Langfuse, on utilise le format data URI avec base64
     generation = langfuse.start_generation(
-        name="speech-to-text",
+        name="VOICEBOT_ASR",
         trace_context={"trace_id": trace_id},
         model="khady/snt_speech_to_text_fasterwhisper",
         input={
@@ -122,7 +122,7 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
             user_id=user_id,
             metadata={
                 "audio_file": audio_file_path,
-                "endpoint_id": RUNPOD_ENDPOINT_ID
+                "endpoint_id": RUNPOD_ASR_ENDPOINT_ID
             },
             tags=["asr", "runpod-serverless", detected_language]
         )
