@@ -68,7 +68,7 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
     generation = langfuse.start_generation(
         name="speech-to-text",
         trace_context={"trace_id": trace_id},
-        model="whisper",
+        model="khady/snt_speech_to_text_fasterwhisper",
         input={
             "audio": f"data:audio/wav;base64,{audio_base64}",
             "language": language,
