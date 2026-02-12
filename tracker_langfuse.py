@@ -61,18 +61,20 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
     }
     
     # Créer une génération pour le modèle ASR AVANT l'appel API
+    # Pour écouter l'audio dans Langfuse, on utilise le format data URI avec base64
     generation = langfuse.start_generation(
         name="speech-to-text",
         trace_context={"trace_id": trace_id},
         model="whisper",
         input={
-            "audio_base64": audio_base64,
+            "audio": f"data:audio/wav;base64,{audio_base64}",
             "language": language,
             "sample_rate": sample_rate
         },
         metadata={
-            "audio_file": audio_file_path,
-            "user_id": user_id
+            "audio_file_path": audio_file_path,
+            "user_id": user_id,
+            "audio_size_bytes": len(audio_base64)
         }
     )
     
