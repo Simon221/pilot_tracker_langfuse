@@ -51,8 +51,11 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
     try:
         with wave.open(audio_file_path, 'rb') as wav_file:
             sample_rate = wav_file.getframerate()
+            n_frames = wav_file.getnframes()
+            audio_duration = n_frames / sample_rate  # Calculer la durée en secondes
     except:
         sample_rate = 16000  # Default fallback
+        audio_duration = 0
     
     # Préparer le payload - match the transcribe API format
     payload = {
@@ -100,7 +103,6 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
         # Extraire les résultats directement du response
         transcription = result.get("transcription", "")
         detected_language = result.get("language", language)
-        audio_duration = result.get("duration", 0)
         
         # Mettre à jour la génération avec les résultats et métadatas
         generation.update(
