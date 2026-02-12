@@ -60,20 +60,19 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
         "sample_rate": sample_rate,
     }
     
-    # Démarrer un span pour l'appel API
-    api_span = langfuse.start_span(
-        name="runpod-api-call",
+    # Créer une génération pour le modèle ASR AVANT l'appel API
+    generation = langfuse.start_generation(
+        name="speech-to-text",
         trace_context={"trace_id": trace_id},
+        model="whisper",
         input={
-            "endpoint": RUNPOD_ENDPOINT_ID,
+            "audio_base64": audio_base64,
             "language": language,
-            "audio_size_kb": len(audio_base64) / 1024,
-            "audio_base64": audio_base64[:100] + "..."  # Garder juste les premiers 100 caractères pour la lisibilité
+            "sample_rate": sample_rate
         },
         metadata={
             "audio_file": audio_file_path,
-            "user_id": user_id,
-            "sample_rate": sample_rate
+            "user_id": user_id
         }
     )
     
@@ -101,30 +100,16 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
         detected_language = result.get("language", language)
         audio_duration = result.get("duration", 0)
         
-        # Finaliser le span
-        api_span.end()
-        
-        # Créer une génération pour le modèle ASR avec input/output complets
-        generation = langfuse.start_generation(
-            name="speech-to-text",
-            trace_context={"trace_id": trace_id},
-            model="whisper",
-            input={
-                "audio_base64": audio_base64,
-                "audio_duration_seconds": audio_duration,
-                "language": language,
-                "sample_rate": sample_rate
-            },
+        # Mettre à jour la génération avec les résultats et métadatas
+        generation.update(
+            output=transcription,
             metadata={
                 "processing_time_ms": processing_time * 1000,
                 "real_time_factor": processing_time / audio_duration if audio_duration > 0 else None,
-                "audio_file": audio_file_path
+                "audio_file": audio_file_path,
+                "user_id": user_id,
+                "audio_duration_seconds": audio_duration
             }
-        )
-        
-        # Mettre à jour et finaliser la génération avec l'output
-        generation.update(
-            output=transcription
         )
         generation.end()
         
@@ -150,9 +135,6 @@ def transcribe_audio(audio_file_path, language="auto", user_id=None):
         }
         
     except Exception as e:
-        # Finaliser le span avec erreur
-        api_span.end()
-        
         langfuse.flush()
         raise
 
